@@ -1,7 +1,5 @@
 # Usage: pip install -r requirements.txt
 
-# Base ----------------------------------------
-ultralytics
 
 # Plotting ------------------------------------
 pandas>=1.1.4
