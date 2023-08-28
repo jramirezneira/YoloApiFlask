@@ -1,6 +1,6 @@
 # Usage: pip install -r requirements.txt
 
-request
+requests==2.31.0
 # Plotting ------------------------------------
 pandas>=1.1.4
 seaborn>=0.11.0
