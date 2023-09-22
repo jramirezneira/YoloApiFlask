@@ -31,6 +31,7 @@ Usage - formats:
 from flask import Flask, render_template, Response, request
 import json
 import pandas as pd
+import base64
 
 # ========== Libraries from detect.py ============= #
 
@@ -41,6 +42,22 @@ import sys
 from pathlib import Path
 
 import torch
+import boto3
+
+
+
+
+queue_url = 'https://sqs.us-west-2.amazonaws.com/156581257326/yolo'
+bucket_name='variosjavierramirez'
+
+
+session = boto3.session.Session(profile_name="default")
+sqs = session.client('sqs', verify=False)
+s3_resource = session.resource('s3', verify=False) 
+bucket = s3_resource.Bucket("variosjavierramirez")
+
+
+
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv8API root directory
@@ -211,7 +228,7 @@ def detect(opt):
 
         # Print time (inference-only)
         LOGGER.info(f"{s}{'' if len(det) else '(no detections), '}{dt[1].dt * 1E3:.1f}ms")
-        
+      
         # This is done in order to be shown in a browser, save_txt will return json file, otherwise, an image in bytes
         if save_txt:
             if os.path.exists(txt_path + '.txt'):
@@ -221,13 +238,52 @@ def detect(opt):
                 
             else:
                 result = []
+
+            im0 = cv2.imencode('.jpg', im0)[1].tobytes()
             dict_result=dict()
             dict_result["results"]=result
-            yield json.dumps(dict_result)
+            """  dict_result['img'] =base64.b64encode(im0).decode('utf-8') """
+            bucket.put_object(Bucket=bucket_name,
+                Key=p.stem+'/'+ str(seen)+'.jpg',
+                Body=im0)
+            
+            response = sqs.send_message(
+            QueueUrl=queue_url,
+            DelaySeconds=10,
+            MessageAttributes={
+                'folder': {
+                    'DataType': 'String',
+                    'StringValue': p.stem 
+                },
+                'img': {
+                    'DataType': 'Number',
+                    'StringValue': str(seen)
+                }
+            },
+            MessageBody=(
+               str(dict_result)
+            )
+        )
+            #yield json.dumps(dict_result)
         else:
             im0 = cv2.imencode('.jpg', im0)[1].tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + im0 + b'\r\n')
+            """ yield (b'--frame\r\n'
+                    b'Content-Type: image/jpeg\r\n\r\n' + im0 + b'\r\n') """
+
+
+  
+
+
+            # im0 = cv2.imencode('.jpg', im0)[1].tobytes()
+            # """ yield (b'--frame\r\n'
+            #        b'Content-Type: image/jpeg\r\n\r\n' + im0 + b'\r\n') """
+            # result = pd.read_csv(txt_path + '.txt', sep =" ",names = ["class","x","y","w","h","conf"], header = None)
+            # result = result.to_json(orient="records")
+            # result = json.loads(result)
+            # dict_result=dict()
+            # dict_result['img'] =base64.b64encode(im0).decode('utf-8')
+            # dict_result["results"]=result
+            # yield json.dumps(dict_result)
             
 
     # Print results
