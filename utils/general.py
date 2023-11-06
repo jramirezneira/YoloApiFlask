@@ -34,11 +34,18 @@ def update_options(request):
 
     
     # POST parameters
-    if request.method == 'POST':
+    elif request.method == 'POST':
         json_data = request.get_json() #Get the POSTed json
         json_data = json.dumps(json_data) # API receive a dictionary, so I have to do this to convert to string
         dict_data = json.loads(json_data) # Convert json to dictionary 
         source = dict_data['url']
-        save_txt = dict_data.get('save_txt', None)        
+        save_txt = dict_data.get('save_txt', None) 
+
+    # else:     
+
+    # request_split= request.split("&")
+    # source = request_split[0]
+    # s3_folder = request_split[1]
+    # save_txt = False   
     
-    return source, save_txt
+    return source, save_txt#, s3_folder
