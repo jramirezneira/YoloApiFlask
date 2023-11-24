@@ -378,16 +378,18 @@ class LoadStreams:
                 assert not is_kaggle(), '--source 0 webcam unsupported on Kaggle. Rerun command in a local environment.'
             cap = cv2.VideoCapture(s)
             assert cap.isOpened(), f'{st}Failed to open {s}'
-            w = int(img_size[1])#int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            h = int(img_size[0])#int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+            w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            # cap = cv2.resize(cap, (w, h))
             fps = cap.get(cv2.CAP_PROP_FPS)  # warning: may return 0 or nan
             self.frames[i] = max(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)), 0) or float('inf')  # infinite stream fallback
             self.fps[i] = max((fps if math.isfinite(fps) else 0) % 100, 0) or 30  # 30 FPS fallback
-
+                      
             _, self.imgs[i] = cap.read()  # guarantee first frame
             # cv2.resize
             
-            self.fps[i]=8
+            # self.fps[i]=8
             self.threads[i] = Thread(target=self.update, args=([i, cap, s]), daemon=True)
             LOGGER.info(f'{st} Success ({self.frames[i]} frames {w}x{h} at {self.fps[i]:.2f} FPS)')
             self.threads[i].start()
@@ -410,6 +412,7 @@ class LoadStreams:
             if n % self.vid_stride == 0:
                 success, im = cap.retrieve()
                 if success:
+                    im = cv2.resize(im, (1280, 720))
                     self.imgs[i] = im
                 else:
                     LOGGER.warning('WARNING ⚠️ Video stream unresponsive, please check your IP camera connection.')

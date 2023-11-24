@@ -43,9 +43,10 @@ import os
 import platform
 import sys
 from pathlib import Path
-
+from PIL import Image, ImageFont
+import numpy as np
 import torch
-import boto3
+# import boto3
 
 from vidgear.gears import CamGear
 from vidgear.gears import WriteGear
@@ -54,14 +55,13 @@ from vidgear.gears import WriteGear
 output_params = {
     "-clones": ["-f", "lavfi", "-i", "anullsrc"],
     "-vcodec": "libx264",
-    "-preset": "fast",
-    "-b:v": "10000k",
-    "-bufsize": "1024k",
+    "-preset": "medium",
+    "-b:v": "4500k",
+    "-bufsize": "512k",
     "-pix_fmt": "yuv420p",
     "-f": "flv",
+   
 }
-
-
 
 
 
@@ -72,8 +72,31 @@ YOUTUBE_STREAM_KEY = "phbq-55ve-tah4-h6jk-a29q"
 writer = WriteGear(
     output="rtmp://a.rtmp.youtube.com/live2/{}".format(YOUTUBE_STREAM_KEY),
     logging=True,
+    compression_mode=True,
     **output_params
 )
+
+
+# output_params = {
+#     "-preset:v": "veryfast",
+#     "-g": 60,
+#     "-keyint_min": 60,
+#     "-sc_threshold": 0,
+#     "-bufsize": "2500k",
+#     "-f": "flv",
+# }
+
+
+# # [WARNING] Change your YouTube-Live Stream Key here:
+# YOUTUBE_STREAM_KEY = "live_985584096_eOiakwNFlyfq7zZsJNkxbc1c72dqlq"
+
+# # Define writer with defined parameters
+# writer = WriteGear(
+#     output="rtmp://live.twitch.tv/app/{}".format(YOUTUBE_STREAM_KEY),
+#     logging=True,
+#     **output_params
+# )
+
 
 
 
@@ -83,6 +106,12 @@ ROOT = FILE.parents[0]  # YOLOv8API root directory
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
+
+font_size = 28
+font_filepath = "C:\\WINDOWS\\Fonts\\Arial\\arial.ttf"
+color = (67, 33, 116, 155)
+
+font = ImageFont.truetype(font_filepath, size=font_size)
 
 
 from ultralytics.yolo.engine.predictor import AutoBackend as DetectMultiBackend
@@ -185,14 +214,14 @@ def detect(opt):
             seen += 1
             if webcam:  # batch_size >= 1
                 p, im0, frame = path[i], im0s[i].copy(), dataset.count
-                s += f'{i}: '
+                # s += f'{i}: '
             else:
                 p, im0, frame = path, im0s.copy(), getattr(dataset, 'frame', 0)
 
             p = Path(p)  # to Path
             save_path = str(save_dir / p.name)  # im.jpg
             txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # im.txt
-            s += '%gx%g ' % im.shape[2:]  # print string
+            s += '' #'%gx%g' #  % im.shape[2:]  # print string
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             imc = im0.copy() if save_crop else im0  # for save_crop
             annotator = Annotator(im0, line_width=line_thickness, example=str(names))
@@ -221,14 +250,14 @@ def detect(opt):
                         save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
 
             # Stream results
-            # im0 = annotator.result()
-            # if view_img:
-            #     if platform.system() == 'Linux' and p not in windows:
-            #         windows.append(p)
-            #         cv2.namedWindow(str(p), cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)  # allow window resize (Linux)
-            #         cv2.resizeWindow(str(p), im0.shape[1], im0.shape[0])
-            #     cv2.imshow(str(p), im0)
-            #     cv2.waitKey(1)  # 1 millisecond
+            im0 = annotator.result()
+            if view_img:
+                if platform.system() == 'Linux' and p not in windows:
+                    windows.append(p)
+                    cv2.namedWindow(str(p), cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)  # allow window resize (Linux)
+                    cv2.resizeWindow(str(p), im0.shape[1], im0.shape[0])
+                cv2.imshow(str(p), im0)
+                cv2.waitKey(1)  # 1 millisecond
 
             # Save results (image with detections)
             # if save_img:
@@ -267,14 +296,25 @@ def detect(opt):
             dict_result["results"]=result
            
             cv2.imshow('current_img', im0) 
-            writer.write(im0, rgb_mode=True)
+            # writer.write(im0, rgb_mode=True)
 
            
         else:
             # im0 = cv2.imencode('.jpg', im0)[1].tobytes()
-            # im0 =cv2.resize(im0, (960,540))
+            # im0 =cv2.resize(im0, (1280,720))
             writer.write(im0)
             # cv2.imshow('current_img', im0) 
+            # text = f"{s}"
+            
+            # mask_image = font.getmask(text[:-2], "L")
+            # img = Image.new("RGBA", mask_image.size, "white")
+            # img.im.paste(color, (0, 0) + mask_image.size, mask_image)  # need to use the inner `img.im.paste` due to `getmask` returning a core
+            # # img.save("yes.png")
+            # # im0.paste(img, (100, 50))
+
+            # open_cv_image = np.array(img) 
+            
+            # cv2.imshow('img_text', open_cv_image) 
 
            
           
@@ -283,8 +323,8 @@ def detect(opt):
            
    
 
-    # safely close writer
-    writer.close()        
+    # # safely close writer
+    # writer.close()        
 
     # Print results
     t = tuple(x.t / seen * 1E3 for x in dt)  # speeds per image
@@ -322,9 +362,10 @@ if __name__ == "__main__":
     # Input arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'yolov8s.pt', help='model path or triton URL')
-    parser.add_argument('--source', type=str, default="rtsp://192.168.1.159:554/11", help='file/dir/URL/glob/screen/0(webcam)')
+    parser.add_argument('--source', type=str, default="rtsp://192.168.1.114:554/11", help='file/dir/URL/glob/screen/0(webcam)')
+    # parser.add_argument('--source', type=str, default="https://www.youtube.com/watch?v=qmvITXWnL-U", help='file/dir/URL/glob/screen/0(webcam)')
     parser.add_argument('--data', type=str, default=ROOT / 'data/coco128.yaml', help='(optional) dataset.yaml path')
-    parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[288, 480], help='inference size h,w')
+    parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.45, help='NMS IoU threshold')
     parser.add_argument('--max-det', type=int, default=1000, help='maximum detections per image')

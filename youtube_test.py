@@ -17,8 +17,24 @@ output_params = {
     "-f": "flv",
 }
 
+# output_params = {
+#     "-acodec": "aac",
+#     "-ar": 44100,
+#     "-b:a": 712000,
+#     "-vcodec": "libx264",
+#     "-preset": "medium",
+#     "-b:v": "4500k",
+#     "-bufsize": "512k",
+#     "-pix_fmt": "yuv420p",
+#     "-f": "flv",
+# }
+
+
+
+
 # [WARNING] Change your YouTube-Live Stream Key here:
 YOUTUBE_STREAM_KEY = "phbq-55ve-tah4-h6jk-a29q"
+
 
 # Define writer with defined parameters
 writer = WriteGear(
