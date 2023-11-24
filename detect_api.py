@@ -62,7 +62,7 @@ bucket = s3_resource.Bucket(bucket_name)
 # s3location = s3_resource.get_bucket_location(Bucket=bucket_name)['LocationConstraint']
 
 font_size = 28
-font_filepath = "C:\\WINDOWS\\Fonts\\Arial\\arial.ttf"
+font_filepath = "arial.ttf"
 color = (67, 33, 116, 155)
 
 font = ImageFont.truetype(font_filepath, size=font_size)
