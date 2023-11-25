@@ -60,7 +60,7 @@ output_params = {
     "-bufsize": "512k",
     "-pix_fmt": "yuv420p",
     "-f": "flv",
-   
+
 }
 
 
@@ -305,16 +305,16 @@ def detect(opt):
             writer.write(im0)
             # cv2.imshow('current_img', im0) 
             # text = f"{s}"
-            
+
             # mask_image = font.getmask(text[:-2], "L")
             # img = Image.new("RGBA", mask_image.size, "white")
             # img.im.paste(color, (0, 0) + mask_image.size, mask_image)  # need to use the inner `img.im.paste` due to `getmask` returning a core
             # # img.save("yes.png")
             # # im0.paste(img, (100, 50))
 
-            # open_cv_image = np.array(img) 
-            
-            # cv2.imshow('img_text', open_cv_image) 
+            # open_cv_image = np.array(img)
+
+            # cv2.imshow('img_text', open_cv_image)
 
            
           
@@ -324,7 +324,7 @@ def detect(opt):
    
 
     # # safely close writer
-    # writer.close()        
+    writer.close()
 
     # Print results
     t = tuple(x.t / seen * 1E3 for x in dt)  # speeds per image
