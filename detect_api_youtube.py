@@ -389,7 +389,7 @@ if __name__ == "__main__":
     parser.add_argument('--half', action='store_true', help='use FP16 half-precision inference')
     parser.add_argument('--dnn', action='store_true', help='use OpenCV DNN for ONNX inference')
     parser.add_argument('--vid-stride', type=int, default=1, help='video frame-rate stride')
-    parser.add_argument('--port', default=8888, type=int, help='port deployment')
+    parser.add_argument('--port', default=5000, type=int, help='port deployment')
     opt, unknown = parser.parse_known_args()
 
     # Just in case one dimension if provided, i.e., if 640 is provided, image inference will be over 640x640 images

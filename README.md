@@ -127,3 +127,18 @@ b'{"results": [{"class": 72, "x": 0.647187, "y": 0.495779, "w": 0.421875, "h": 0
 This code is based on the YOLOv5 from Ultralytics and it has been modified by Henry Navarro
  
 If you want to know more about me, please visit my blog: henrynavarro.org.
+
+
+Comandos docker para subir a ECR
+
+docker build -t flask-demo-app .
+aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+
+docker run -it -p 5000:5000 flask-demo-app:latest
+
+docker images
+docker tag c6c4faaec662 public.ecr.aws/e9n5a5n7/flask-app
+
+
+
+docker push public.ecr.aws/e9n5a5n7/flask-app
