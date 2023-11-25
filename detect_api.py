@@ -51,14 +51,14 @@ import boto3
 
 
 
-queue_url = 'https://sqs.us-west-2.amazonaws.com/156581257326/yolo'
-bucket_name='variosjavierramirez'
-
-
-session = boto3.session.Session(profile_name="default")
-sqs = session.client('sqs', verify=False)
-s3_resource = session.resource('s3', verify=False) 
-bucket = s3_resource.Bucket(bucket_name)
+# queue_url = 'https://sqs.us-west-2.amazonaws.com/156581257326/yolo'
+# bucket_name='variosjavierramirez'
+#
+#
+# session = boto3.session.Session(profile_name="default")
+# sqs = session.client('sqs', verify=False)
+# s3_resource = session.resource('s3', verify=False)
+# bucket = s3_resource.Bucket(bucket_name)
 # s3location = s3_resource.get_bucket_location(Bucket=bucket_name)['LocationConstraint']
 
 font_size = 28
