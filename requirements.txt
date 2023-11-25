@@ -14,6 +14,7 @@ torch>=1.7.0
 torchvision>=0.8.1
 tqdm>=4.64.0
 vidgear>=0.3.2
+boto3
 # Export --------------------------------------
 # coremltools>=6.0  # CoreML export
 # onnx>=1.12.0  # ONNX export
