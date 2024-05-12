@@ -48,14 +48,14 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
-from ultralytics.yolo.engine.predictor import AutoBackend as DetectMultiBackend
-from ultralytics.yolo.data.utils import IMG_FORMATS, VID_FORMATS
-from ultralytics.yolo.data.dataloaders.v5loader import LoadImages, LoadScreenshots, LoadStreams
-from ultralytics.yolo.utils.ops import LOGGER, Profile, non_max_suppression, process_mask_native, process_mask, masks2segments, scale_coords, scale_boxes
-from ultralytics.yolo.utils.checks import check_file, check_imgsz, check_requirements, colorstr, cv2, print_args
-from ultralytics.yolo.utils.files import increment_path
-from ultralytics.yolo.utils.plotting import Annotator, colors, save_one_box
-from ultralytics.yolo.utils.torch_utils import strip_optimizer, select_device, smart_inference_mode
+from ultralytics_old.yolo.engine.predictor import AutoBackend as DetectMultiBackend
+from ultralytics_old.yolo.data.utils import IMG_FORMATS, VID_FORMATS
+from ultralytics_old.yolo.data.dataloaders.v5loader import LoadImages, LoadScreenshots, LoadStreams
+from ultralytics_old.yolo.utils.ops import LOGGER, Profile, non_max_suppression, process_mask_native, process_mask, masks2segments, scale_coords, scale_boxes
+from ultralytics_old.yolo.utils.checks import check_file, check_imgsz, check_requirements, colorstr, cv2, print_args
+from ultralytics_old.yolo.utils.files import increment_path
+from ultralytics_old.yolo.utils.plotting import Annotator, colors, save_one_box
+from ultralytics_old.yolo.utils.torch_utils import strip_optimizer, select_device, smart_inference_mode
 
 # Extra utils
 from utils.general import update_options
