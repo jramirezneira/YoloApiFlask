@@ -21,6 +21,7 @@ from ultralytics.utils import LOGGER, ROOT, is_colab, is_kaggle, ops
 from ultralytics.utils.checks import check_requirements
 
 from utils.general import image_resize
+import queue, threading, time
 
 
 @dataclass
@@ -34,11 +35,63 @@ class SourceTypes:
 class LoadStreamNoThread:
 
     def __init__(self, source):
-        import pafy  # noqa
-        source = pafy.new(source).getbest(preftype='mp4').url
+        if urlparse(source).hostname in ('www.youtube.com', 'youtube.com', 'youtu.be'):
+            check_requirements(('pafy', 'youtube_dl==2020.12.2'))
+            import pafy
+            source = pafy.new(source).getbest(preftype='mp4').url
         self.cap = cv2.VideoCapture(source)
-        assert self.cap.isOpened(), "Error reading video file"
+        # self.cap.set(cv2.CAP_PROP_BUFFERSIZE,5)
+
+        # cv2.set(cv2.CAP_PROP_BUFFERSIZE, my_size)
+        if not self.cap.isOpened():
+                raise ConnectionError(f'Failed to open')
+        
+        (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
+ 
+        if int(major_ver)  < 3 :
+            fps = self.cap.get(cv2.cv.CV_CAP_PROP_FPS)
+            print ("Frames per second using video.get(cv2.cv.CV_CAP_PROP_FPS): {0}".format(fps))
+        else :
+            fps = self.cap.get(cv2.CAP_PROP_FPS)
+            print ("Frames per second using video.get(cv2.CAP_PROP_FPS) : {0}".format(fps))
+    
+        
+        # self.cap.set(cv2.CV_CAP_PROP_BUFFERSIZE,1)
         return None
+        # self.q = queue.Queue()
+        # t = threading.Thread(target=self._reader)
+        # t.daemon = True
+        # t.start()
+    
+
+    # read frames as soon as they are available, keeping only most recent one
+    def _reader(self):
+        while self.cap.isOpened:
+            time.sleep(0.01)
+           
+            if(self.q.qsize()<=300): 
+                self.cap.grab() 
+                ret, frame = self.cap.retrieve()
+                if not ret:
+                    break
+                frame=image_resize(frame, height = 720)
+                print(self.q.qsize())
+                # if not self.q.empty():
+                #     try:
+                #         self.q.get()   # discard previous (unprocessed) frame
+                #     except queue.Empty:
+                #         pass
+                self.q.put(frame)
+
+    def read(self):
+        return self.q.get()
+
+
+        # import pafy  # noqa
+        # source = pafy.new(source).getbest(preftype='mp4').url
+        # self.cap = cv2.VideoCapture(source)
+        # assert self.cap.isOpened(), "Error reading video file"
+        # return None
 
     def getCap(self):
         print("pasa 0")
@@ -65,9 +118,9 @@ class LoadStreams:
             st = f'{i + 1}/{n}: {s}... '
             if urlparse(s).hostname in ('www.youtube.com', 'youtube.com', 'youtu.be'):  # if source is YouTube video
                 # YouTube format i.e. 'https://www.youtube.com/watch?v=Zgi9g1ksQHc' or 'https://youtu.be/Zgi9g1ksQHc'
-                check_requirements(('pafy', 'youtube_dl==2020.12.2'))
+                check_requirements(('pafy', 'youtube_dl'))
                 import pafy  # noqa
-                s = pafy.new(s).getbest(preftype='mp4').url  # YouTube URL
+                s = pafy.new(s).getbest(preftype="mp4").url  # YouTube URL
             s = eval(s) if s.isnumeric() else s  # i.e. s = '0' local webcam
             if s == 0 and (is_colab() or is_kaggle()):
                 raise NotImplementedError("'source=0' webcam not supported in Colab and Kaggle notebooks. "

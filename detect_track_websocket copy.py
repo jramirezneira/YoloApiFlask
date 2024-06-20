@@ -173,16 +173,16 @@ region_points2 = [(0,300), (500, 300), (500, 720), (0,720)]
 
 # Init Object Counter
 counter = object_counter.ObjectCounter()
-counter.set_args(view_img=False,
-                reg_pts=region_points,
-                classes_names=names,
-                draw_tracks=True)
+# counter.set_args(view_img=False,
+#                 reg_pts=region_points,
+#                 classes_names=names,
+#                 draw_tracks=True)
 
 counter2 = object_counter.ObjectCounter()
-counter2.set_args(view_img=False,
-                reg_pts=region_points2,
-                classes_names=names,
-                draw_tracks=True)
+# counter2.set_args(view_img=False,
+#                 reg_pts=region_points2,
+#                 classes_names=names,
+#                 draw_tracks=True)
 
 opt.source =""
 weights=opt.weights  # model path or triton URL
@@ -210,7 +210,7 @@ hide_conf=opt.hide_conf  # hide confidences
 vid_stride=opt.vid_stride  # video frame-rate stride
 
 
-
+source="https://www.youtube.com/watch?v=bJpxhD_JDAA"
 save_img = not nosave and not source.endswith('.txt')  # save inference images
 is_file = Path(source).suffix[1:] in (IMG_FORMATS + VID_FORMATS)
 is_url = source.lower().startswith(('rtsp://', 'rtmp://', 'http://', 'https://'))

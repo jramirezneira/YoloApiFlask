@@ -1,8 +1,6 @@
 # import required libraries
 from vidgear.gears import NetGear
 import cv2
-import pafy
-import os
 import json
 from flask import Flask, jsonify, request, Response
 from flask_cors import CORS, cross_origin
@@ -12,12 +10,13 @@ import threading
 from ultralytics import YOLO
 from ultralytics.solutions import object_counter
 from utils.stream_loaders import LoadStreams, LoadImages, LoadStreamNoThread
-import base64
 from collections import  Counter
 import numpy as np
 import time
-import websockets
-import asyncio
+from utils.general import image_resize
+from ultralytics.utils.checks import check_file, check_imgsz, check_requirements, colorstr, cv2, print_args
+
+
 
 
 model = YOLO("yolov8n.pt") 
@@ -95,7 +94,9 @@ setStatus("offline")
 @cross_origin()
 def region_points():
     with open("app.conf",  "r") as json_data_file:
-        return json.load(json_data_file)["region_points"]
+        input_dict=json.load(json_data_file)["region_points"]
+        output_dict = [x for x in input_dict if x['available'] == 1]
+        return output_dict
     
 
 @app.route('/api/status', methods=['GET'])
@@ -103,6 +104,8 @@ def region_points():
 def status():
     response = {'message': getStatus()}
     return jsonify(response)
+
+
 
 @app.route('/api/start', methods=['GET'])
 @cross_origin()
@@ -121,7 +124,8 @@ def stop():
     for obj in gc.get_objects():
         if isinstance(obj, LoadStreamNoThread):
             try:
-                obj.cap.release()                 
+                obj.cap.release()   
+                              
                 LOGGER.info("close release objet {obj}")
             except:
                 LOGGER.error("An exception occurred in obj.cap.release {obj}")
@@ -136,9 +140,10 @@ data_dict = {}
 
 # loop over until KeyBoard Interrupted
 
-def service(source, isStreaming=True):
-    # cont=0
+def service(source, isVideo=True):
+    
     counter=[]
+    # source="rtsp://192.168.1.159:554/11"
     vid_writer=None
     with open("app.conf",  "r") as json_data_file:
         region_points= json.load(json_data_file)["region_points"]
@@ -155,65 +160,68 @@ def service(source, isStreaming=True):
                     )
         counter.append(ctr)
     
-    if isStreaming:
+    if isVideo:
         # dataset =LoadStreams(source, imgsz=[288, 480], auto=True, vid_stride=1)        
-        try:
+        # try:
             ldst = LoadStreamNoThread(source)
+            # cap = cv2.VideoCapture(source)
             cap = ldst.getCap()
-        except:
-            LOGGER.error("An exception occurred to open cap.release")
+            
+            
+        # except:
+        #      LOGGER.error("An exception occurred to open cap.release")
     else:
         dataset = LoadImages(source, imgsz=[288, 480], stride=32, auto=True, vid_stride=1)
 
     # for frame_idx, batch in enumerate(dataset):
         # 
     n=0
-    while cap.isOpened():
+    while cap.isOpened:
+        
         try:
+            time.sleep(0.00000001)
             n += 1          
-            success, im0 = cap.read()  
-            if n % 1== 0:
+            cap.read() 
+            cap.grab() 
+            
+           
+            
+            results=None
+            if n % 2== 0:
+                ret, im0 = cap.retrieve()
+                if not ret:
+                    break
+                im0=image_resize(im0, height = 720)
                 dict_result=dict()
                 dict_result["verbose"] =False
                 results = model.track(im0, persist=True, imgsz=480, show=False, **dict_result)
 
+               
                 for ctr in counter:
-                    im0 = ctr.start_counting(im0, results)    
-                
-                # Convert list to an array
-                time.sleep(0.001)
+                    im0 = ctr.start_counting(im0, results)  
+            # if isStreaming:
                 server.send(im0)        
-        except:
-            LOGGER.error("sale del while true")
-            cv2.destroyAllWindows()
-            setStatus("offline")
-            break 
+                # else:
+                #     yield (b'--frame\r\n'
+                #             b'Content-Type: image/jpeg\r\n\r\n' + im0 + b'\r\n')
+        except Exception as e:
+            print(e)
+            continue
+
+            # if cap.q.qsize()==0:
+    cv2.destroyAllWindows()
+    setStatus("offline")
+      
 
     # safely close video stream
-    cv2.destroyAllWindows()
-    # safely close server
-    # server.close()
-    setStatus("offline")
+    
 
 
 @app.route('/detect',methods = ['POST', 'GET'])
 def video_feed():
     """Video streaming home page."""
-    source = request.args.get('url')
-
-    return Response(detect(source), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-def detect(source):
-    dataset = LoadStreams(source, imgsz=[288, 480], stride=32, auto=True, vid_stride=1)
-    for frame_idx, batch in enumerate(dataset):
-        path, im, im0s, vid_cap, s = batch
-        im0=im0s[0].copy()
-        results = model.track(im0, persist=True, show=False)
-
-       
-        im0 = cv2.imencode('.jpg', im0)[1].tobytes()
-        yield (b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + im0 + b'\r\n')
+    source = request.args.get('url')    
+    return Response(service(source, True, False), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 if __name__ == '__main__':

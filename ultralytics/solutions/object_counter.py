@@ -162,66 +162,80 @@ class ObjectCounter:
 
     def extract_and_process_tracks(self, tracks):
         """Extracts and processes tracks for object counting in a video stream."""
-        boxes = tracks[0].boxes.xyxy.cpu()
-        clss = tracks[0].boxes.cls.cpu().tolist()
-        track_ids = tracks[0].boxes.id.int().cpu().tolist()
 
-        # Annotator Init and region drawing
+         # Annotator Init and region drawing
         self.annotator = Annotator(self.im0, self.tf, self.names)
         self.annotator.draw_region(reg_pts=self.reg_pts, color=self.region_color, thickness=self.region_thickness)
+        
+        if tracks is not None:
+            boxes = tracks[0].boxes.xyxy.cpu()
+            clss = tracks[0].boxes.cls.cpu().tolist()
+            track_ids = tracks[0].boxes.id.int().cpu().tolist()
+            
 
-        # Extract tracks
-        for box, track_id, cls in zip(boxes, track_ids, clss):
-            # Draw bounding box
-            self.annotator.box_label(box, label=f"{track_id}:{self.names[cls]}", color=colors(int(cls), True))
+           
 
-            # Draw Tracks
-            track_line = self.track_history[track_id]
-            track_line.append((float((box[0] + box[2]) / 2), float((box[1] + box[3]) / 2)))
-            if len(track_line) > 30:
-                track_line.pop(0)
+            # Extract tracks
+            for box, track_id, cls in zip(boxes, track_ids, clss):
+                # Draw bounding box
+                # self.annotator.box_label(box, label=f"{track_id}:{self.names[cls]}", color=colors(int(cls), True))
 
-            # Draw track trails
-            if self.draw_tracks:
-                self.annotator.draw_centroid_and_tracks(
-                    track_line, color=self.track_color, track_thickness=self.track_thickness
-                )
+                # Draw Tracks
+                track_line = self.track_history[track_id]
+                track_line.append((float((box[0] + box[2]) / 2), float((box[1] + box[3]) / 2)))
+                if len(track_line) > 30:
+                    track_line.pop(0)
 
-            prev_position = self.track_history[track_id][-2] if len(self.track_history[track_id]) > 1 else None
+                # Draw track trails
+                if self.draw_tracks:
+                    self.annotator.draw_centroid_and_tracks(
+                        track_line, color=self.track_color, track_thickness=self.track_thickness
+                    )
 
-            # Count objects
-            if len(self.reg_pts) == 4:
-                if (
-                    prev_position is not None
-                    and self.counting_region.contains(Point(track_line[-1]))
-                    and track_id not in self.counting_list
-                ):
-                    self.counting_list.append(track_id)
-                    self.counting_list_by_class.append(cls)
-                    if (box[0] - prev_position[0]) * (self.counting_region.centroid.x - prev_position[0]) > 0:
-                        self.in_counts += 1                        
-                    else:
-                        self.out_counts += 1
+                prev_position = self.track_history[track_id][-2] if len(self.track_history[track_id]) > 1 else None
 
-            elif len(self.reg_pts) == 2:
-                if prev_position is not None:
-                    distance = Point(track_line[-1]).distance(self.counting_region)
-                    if distance < self.line_dist_thresh and track_id not in self.counting_list:
+                # Count objects
+                if len(self.reg_pts) == 4:
+                    if (
+                        prev_position is not None
+                        and self.counting_region.contains(Point(track_line[-1]))
+                        and track_id not in self.counting_list
+                    ):
                         self.counting_list.append(track_id)
-                        self.counting_list_by_class.append(cls)
+                        self.counting_list_by_class.append([track_id, cls])
+                        self.annotator.box_label(box, label=f"{track_id}:{self.names[cls]}", color=colors(int(cls), True))
                         if (box[0] - prev_position[0]) * (self.counting_region.centroid.x - prev_position[0]) > 0:
-                            self.in_counts += 1                            
+                            self.in_counts += 1                        
                         else:
                             self.out_counts += 1
 
-        incount_label = f"In Count : {self.in_counts}"
-        outcount_label = f"OutCount : {self.out_counts}"
+                elif len(self.reg_pts) == 2:
+                    
+                    if prev_position is not None:
+                        distance = Point(track_line[-1]).distance(self.counting_region)
+                        if distance < self.line_dist_thresh and track_id not in self.counting_list:
+                            self.counting_list.append(track_id)
+                            self.counting_list_by_class.append([track_id, cls])
+                            
+                            if (box[0] - prev_position[0]) * (self.counting_region.centroid.x - prev_position[0]) > 0:
+                                self.in_counts += 1                            
+                            else:
+                                self.out_counts += 1
 
- 
-        stats = Counter(self.counting_list_by_class)
+                if self.counting_list_by_class:
+                    if track_id in list(list(zip(*self.counting_list_by_class))[0]):
+                        self.annotator.box_label(box, label=f"{track_id}:{self.names[cls]}", color=colors(int(cls), True))
+
+            # incount_label = f"In Count : {self.in_counts}"
+            # outcount_label = f"OutCount : {self.out_counts}"
+        # for i in self.counting_list_by_class:
+        #     self.annotator.box_label(box, label=f"{track_id}:{self.names[cls]}", color=colors(int(cls), True))
+
         counts_label= []
-        for stat in stats:
-            counts_label.append(f"{self.names[stat]}: {str(stats[stat])}")
+        if self.counting_list_by_class:
+            stats = Counter(list(list(zip(*self.counting_list_by_class))[1]))            
+            for stat in stats:
+                counts_label.append(f"{self.names[stat]}: {str(stats[stat])}")
 
         # Display counts based on user choice  
         # if not self.view_in_counts and not self.view_out_counts:
@@ -265,10 +279,15 @@ class ObjectCounter:
         """
         self.im0 = im0  # store image
 
-        if tracks[0].boxes.id is None:
-            if self.view_img:
-                self.display_frames()
-            return im0
+        # if tracks is None:
+        #     return im0
+
+        if tracks is not None:
+            if tracks[0].boxes.id is None:
+                if self.view_img:
+                    self.display_frames()
+                return im0
+        # if tracks is None:
         self.extract_and_process_tracks(tracks)
 
         if self.view_img:
