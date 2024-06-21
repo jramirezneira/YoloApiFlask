@@ -17,7 +17,7 @@ ADD . '/usr/app'
 RUN apt-get update && \
     apt-get -y install python3-pandas
 
-RUN pip install --trusted-host pypi.python.org -r requirements.txt
+RUN pip install --trusted-host pypi.python.org -r requirements2.txt
 
 # Exposing the flask app port from container to host
 EXPOSE 5000
