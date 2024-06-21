@@ -23,4 +23,4 @@ RUN pip install --trusted-host pypi.python.org -r requirements.txt
 EXPOSE 5000
 
 # Starting application
-CMD ["python", "detect_api.py"]
+CMD ["python", "server.py"]

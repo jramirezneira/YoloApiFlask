@@ -39,6 +39,6 @@ py-cpuinfo
 
 # API -----------------------------------------
 Flask>=2.0
-# flask-sock
+# pip installflask-sock
 flask-cors
 
