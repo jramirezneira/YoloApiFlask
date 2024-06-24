@@ -1,6 +1,6 @@
 # import required libraries
 from vidgear.gears import NetGear
-import cv2
+
 import json
 from flask import Flask, jsonify, request, Response
 from flask_cors import CORS, cross_origin
@@ -15,6 +15,7 @@ import numpy as np
 import time
 from utils.general import image_resize
 from ultralytics.utils.checks import check_file, check_imgsz, check_requirements, colorstr, cv2, print_args
+import cv2
 
 
 
