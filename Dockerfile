@@ -24,4 +24,4 @@ EXPOSE 5001
 EXPOSE 5567
 
 # Starting application
-CMD ["python", "server.py"]
+CMD ["python", "test.py"]
