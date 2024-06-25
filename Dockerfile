@@ -17,6 +17,8 @@ ADD . '/usr/app'
 RUN apt-get update && \
     apt-get -y install python3-pandas
 
+RUN sudo apt-get install python3-opencv
+
 RUN pip install --trusted-host pypi.python.org -r requirements2.txt
 
 # Exposing the flask app port from container to host
@@ -24,4 +26,4 @@ EXPOSE 5001
 EXPOSE 5567
 
 # Starting application
-CMD ["python", "test.py"]
+CMD ["python", "server.py"]
