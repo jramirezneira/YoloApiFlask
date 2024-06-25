@@ -17,7 +17,7 @@ ADD . '/usr/app'
 RUN apt-get update && \
     apt-get -y install python3-pandas
 
-RUN sudo apt-get install python3-opencv
+RUN apt-get install python3-opencv
 
 RUN pip install --trusted-host pypi.python.org -r requirements2.txt
 
