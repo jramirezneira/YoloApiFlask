@@ -61,7 +61,7 @@ cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 try:
-    ipclient=os.getenv("ipclient")
+    ipclient=os.getenv("IP_CLIENT")
 except Exception as e:
     print(e)
     ipclient="127.0.0.1"
