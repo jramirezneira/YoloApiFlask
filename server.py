@@ -66,6 +66,8 @@ except Exception as e:
     print(e)
     ipclient="127.0.0.1"
 
+print("Running in ip adress : %s" % ipclient)
+
 server = NetGear(
     address=ipclient,
     port=["5567"],
