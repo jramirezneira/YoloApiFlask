@@ -1,6 +1,6 @@
 # import required libraries
 from vidgear.gears import NetGear
-
+import os
 import json
 from flask import Flask, jsonify, request, Response
 from flask_cors import CORS, cross_origin
@@ -9,12 +9,9 @@ from ultralytics.utils.ops import LOGGER
 import threading
 from ultralytics import YOLO
 from ultralytics.solutions import object_counter
-from utils.stream_loaders import LoadStreams, LoadImages, LoadStreamNoThread
-from collections import  Counter
-import numpy as np
+from utils.stream_loaders import LoadImages, LoadStreamNoThread
 import time
 from utils.general import image_resize
-from ultralytics.utils.checks import check_file, check_imgsz, check_requirements, colorstr, cv2, print_args
 import cv2
 
 
@@ -63,9 +60,14 @@ app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
+try:
+    ipclient=os.environ['ipclient']
+except Exception as e:
+    print(e)
+    ipclient="127.0.0.1"
 
 server = NetGear(
-    address="127.0.0.1",
+    address=ipclient,
     port=["5567"],
     protocol="tcp",
     pattern=2,
